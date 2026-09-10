@@ -1,6 +1,6 @@
 import React from 'react';
 import { 
-  Minus, Square, X, HardDrive, ShieldCheck, Sparkles, 
+   HardDrive, ShieldCheck, Sparkles, 
   FileText, BookOpen, Download, FolderOpen, Plus
 } from 'lucide-react';
 import { DocumentProject } from '../types';
@@ -40,10 +40,7 @@ export const TitleBar: React.FC<TitleBarProps> = ({
     >
       {/* Left: App Identity & Quick Actions */}
       <div className="flex items-center gap-2 overflow-hidden">
-        <div className="flex items-center gap-1.5 font-medium pr-2.5 border-r border-slate-200" title="Symphony">
-          <img src="/logo.png" alt="Symphony Logo" className="h-5 object-contain rounded-sm" />
-          <span className="truncate hidden sm:inline text-slate-800 tracking-tight text-xs font-extrabold" style={{ color: "var(--brand-color, #1e293b)" }}>Symphony</span>
-        </div>
+        
 
         {/* Document Quick Title */}
         <div className="flex items-center gap-2 truncate">
@@ -106,37 +103,7 @@ export const TitleBar: React.FC<TitleBarProps> = ({
           <Download className="w-3.5 h-3.5" />
         </button>
 
-        {/* Windows Standard Controls */}
-        <div className="flex items-center ml-2 pl-1 border-l border-slate-200">
-          <button
-            id="win-btn-minimize"
-            title="Minimize Window"
-            onClick={() => {}}
-            className="h-7 w-8 flex items-center justify-center hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition"
-          >
-            <Minus className="w-3 h-3" />
-          </button>
-          <button
-            id="win-btn-maximize"
-            title="Maximize Window"
-            onClick={() => {}}
-            className="h-7 w-8 flex items-center justify-center hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition"
-          >
-            <Square className="w-2.5 h-2.5" />
-          </button>
-          <button
-            id="win-btn-close"
-            title="Close Application"
-            onClick={() => {
-              if (window.confirm('Reset this workspace or close session? Unsaved snapshots are kept in local storage.')) {
-                onNew();
-              }
-            }}
-            className="h-7 w-8 flex items-center justify-center hover:bg-red-500 text-slate-600 hover:text-white transition"
-          >
-            <X className="w-3 h-3" />
-          </button>
-        </div>
+        
       </div>
     </header>
   );

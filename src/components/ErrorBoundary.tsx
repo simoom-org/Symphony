@@ -40,7 +40,12 @@ export class ErrorBoundary extends React.Component<Props, State> {
           </div>
           <button 
             className="mt-6 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-            onClick={() => { localStorage.clear(); window.location.reload(); }}
+            onClick={() => { 
+              if (window.confirm("WARNING: This will permanently delete your unsaved temporary drafts! Are you sure you want to clear data?")) {
+                localStorage.clear(); 
+                window.location.reload(); 
+              }
+            }}
           >
             Clear Data & Reload
           </button>

@@ -95,7 +95,7 @@ export const RightInspector: React.FC<RightInspectorProps> = ({
       className="w-full bg-white border-l border-slate-200 flex flex-col h-full select-none text-slate-800"
     >
       {/* Sub-Window / Tab Switcher Ribbon */}
-      <div className="bg-[#f8fafc] p-1 border-b border-slate-200 grid grid-cols-4 gap-1 text-xs">
+      <div className="bg-[#f8fafc] p-1 border-b border-slate-200 grid grid-cols-4 gap-0.5 sm:gap-1 text-xs overflow-x-hidden">
         <button
           onClick={() => onTabChange('metadata')}
           title="Document & Publication Metadata"

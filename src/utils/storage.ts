@@ -146,6 +146,18 @@ export function loadSavedProject(): DocumentProject | null {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
+      return safeParseAndUpgrade(raw);
+    }
+  } catch (err) {
+    console.error('Failed to load project', err);
+  }
+  return null;
+}
+
+function loadSavedProjectLegacy() { // Kept around in case, but unused
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
       const parsed = JSON.parse(raw);
             if (parsed && parsed.chapters && parsed.metadata) {
         // --- Migration from old complex metadata to simple string metadata ---
@@ -218,13 +230,47 @@ export function validateAndUpgradeProject(data: any): DocumentProject {
       ...defaultProj.settings,
       ...(data.settings || {})
     },
-    chapters: (data.chapters && data.chapters.length > 0 ? data.chapters : defaultProj.chapters).map((c: any) => ({
-      ...c,
-      content: typeof c.content === 'string' ? c.content : '',
-      title: typeof c.title === 'string' ? c.title : 'Untitled Chapter'
-    })),
+    chapters: (Array.isArray(data.chapters) && data.chapters.length > 0 ? data.chapters : defaultProj.chapters).map((c: any) => {
+      let contentHtml = typeof c.content === 'string' ? c.content : '';
+      
+      // Auto-conversion: Upgrade old <span> footnotes to <div> footnotes
+      contentHtml = contentHtml.replace(/<span([^>]*class=["']footnote-text["'][^>]*)>([\s\S]*?)<\/span>/gi, '<div$1>$2</div>');
+      
+      return {
+        ...c,
+        content: contentHtml,
+        title: typeof c.title === 'string' ? c.title : 'Untitled Node'
+      };
+    }),
     activeChapterId: data.activeChapterId || (data.chapters?.[0]?.id ?? defaultProj.activeChapterId)
   };
+}
+
+export function safeParseAndUpgrade(contents: string): DocumentProject {
+  try {
+    const data = JSON.parse(contents);
+    if (!data || typeof data !== 'object') throw new Error("Parsed JSON is not an object");
+    return validateAndUpgradeProject(data);
+  } catch (err) {
+    console.error("Failed to parse project file, attempting salvage...", err);
+    // Salvage mode: prevent crash, show raw data safely
+    const defaultProj = createNewProject('blank');
+    defaultProj.metadata.title = 'Recovered Document (Corrupted)';
+    defaultProj.chapters[0].title = 'Salvaged Content';
+    
+    // Safely escape HTML to prevent execution/rendering of broken tags
+    const escapedContents = contents.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    
+    defaultProj.chapters[0].content = `
+      <div style="background: #fee2e2; padding: 16px; border: 1px solid #ef4444; border-radius: 8px; margin-bottom: 20px;">
+        <h3 style="color: #b91c1c; margin-top: 0; margin-bottom: 8px;">⚠️ Corrupted File Recovered</h3>
+        <p style="color: #991b1b; margin-top: 0; font-size: 14px;">The original file could not be parsed properly (likely corrupted or in an incompatible format). Below is the raw data salvaged from the file. You can manually copy your text from here to rebuild your document.</p>
+      </div>
+      <hr/>
+      <pre style="white-space: pre-wrap; font-size: 11px; background: #f8fafc; padding: 10px;">${escapedContents}</pre>
+    `;
+    return defaultProj;
+  }
 }
 
 // ---- File System Access API ----
@@ -243,7 +289,7 @@ export async function pickFileToOpen(): Promise<{ handle: any, project: Document
         }
         try {
           const contents = await file.text();
-          resolve({ handle: null, project: validateAndUpgradeProject(JSON.parse(contents)) });
+          resolve({ handle: null, project: safeParseAndUpgrade(contents) });
         } catch (err) {
           reject(err);
         }
@@ -264,7 +310,7 @@ export async function pickFileToOpen(): Promise<{ handle: any, project: Document
   });
   const file = await handle.getFile();
   const contents = await file.text();
-  return { handle, project: validateAndUpgradeProject(JSON.parse(contents)) };
+  return { handle, project: safeParseAndUpgrade(contents) };
 }
 
 export async function pickFileToSave(project: DocumentProject): Promise<any> {

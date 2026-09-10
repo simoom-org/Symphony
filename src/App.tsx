@@ -13,8 +13,7 @@ import {
   getStoredSnapshots, saveSnapshot,
   pickFileToOpen, pickFileToSave, writeToFileHandle, pickSaveAsFile
 } from './utils/storage';
-import { redistributeFootnotes } from './utils/footnoteHelper';
-import { TitleBar } from './components/TitleBar';
+import { redistributeFootnotes, syncChapterFootnotes } from './utils/footnoteHelper';
 import { TopMenuBar } from './components/TopMenuBar';
 import { LeftChapterTree } from './components/LeftChapterTree';
 import { MiddleEditor } from './components/MiddleEditor';
@@ -217,17 +216,23 @@ export default function App() {
         }
       }
       
-      setDirectSaveMode(true);
-      setIsDirectSaveMode(true);
-      saveProjectToStorage(project);
-      
       if (activeHandle) {
-          const { writeToFileHandle } = await import('./utils/storage');
-          await writeToFileHandle(activeHandle, project);
-      }
-      clearTempProject();
-      setIsDirty(false);
-      showToast('Direct Save enabled: Saved to Disk.');
+          try {
+            const { writeToFileHandle } = await import('./utils/storage');
+            await writeToFileHandle(activeHandle, project);
+          } catch (e: any) {
+            console.error('File write error:', e);
+            showToast('Save cancelled or permission denied.');
+            return;
+          }
+        }
+        
+        setDirectSaveMode(true);
+        setIsDirectSaveMode(true);
+        saveProjectToStorage(project);
+        clearTempProject();
+        setIsDirty(false);
+        showToast('Direct Save enabled: Saved to Disk.');
     } else {
       setDirectSaveMode(false);
       setIsDirectSaveMode(false);
@@ -494,7 +499,27 @@ export default function App() {
   // METADATA & RIGHT PANEL HANDLERS
   // ==========================================
   
-  const handleUpdateMetadata = (field: string, value: string) => { setProject(prev => prev ? { ...prev, metadata: { ...prev.metadata, [field]: value } } : null); setIsDirty(true); };
+  const handleUpdateMetadata = (field: string, value: string) => {
+    setProject(prev => {
+      if (!prev) return prev;
+      let newChapters = prev.chapters;
+      
+      // If language changes, we MUST re-synchronize the footnote numbers across ALL chapters globally
+      if (field === 'language') {
+        newChapters = prev.chapters.map(c => ({
+          ...c,
+          content: syncChapterFootnotes(c.content, value)
+        }));
+      }
+
+      return { 
+        ...prev, 
+        metadata: { ...prev.metadata, [field]: value },
+        chapters: newChapters
+      };
+    });
+    setIsDirty(true);
+  };
 const handleUpdateCover = (updated: Partial<import('./types').DocumentCover>) => { setProject(prev => prev ? { ...prev, metadata: { ...prev.metadata, cover: { ...prev.metadata.cover, ...updated } } } : null); setIsDirty(true); };
 
   // ==========================================
@@ -816,7 +841,7 @@ const handleUpdateCover = (updated: Partial<import('./types').DocumentCover>) =>
 
         <div className="bg-white p-10 rounded-2xl shadow-xl border border-slate-200 max-w-md w-full text-center relative z-10">
           <div className="w-32 h-32 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-sm overflow-hidden bg-transparent p-2">
-            <img src="/logo.png" alt="Symphony Logo" className="w-full h-full object-contain drop-shadow-sm" />
+            <img src="./logo.png" alt="Symphony Logo" className="w-full h-full object-contain drop-shadow-sm" />
           </div>
           <h1 className="text-3xl font-extrabold mb-2 tracking-tight" style={{ color: "var(--brand-color, #1e293b)" }}>Symphony</h1>
           <p className="text-slate-500 mb-8 text-sm">Create, edit, and export books seamlessly.</p>
@@ -905,21 +930,12 @@ const handleUpdateCover = (updated: Partial<import('./types').DocumentCover>) =>
         </div>
       )}
 
-      {/* 1. Portable Windows Title Bar */}
-      <TitleBar 
-          project={project}
+      {/* Unified Top Menu Ribbon */}
+      <TopMenuBar
           isDirty={isDirty}
           isDirectSaveMode={isDirectSaveMode}
           onToggleDirectSave={handleToggleDirectSave}
-        onNew={() => handleSafeRequest('new')}
-        onOpen={() => handleSafeRequest('open')}
-        onSave={handleSave}
-        onPublish={() => setPublishingModal(true)}
-      />
-
-      {/* 2. Top Menu Ribbon */}
-      <TopMenuBar
-        project={project}
+          project={project}
         onNew={() => handleSafeRequest('new')}
         onOpen={() => handleSafeRequest('open')}
         onSave={handleSave}
@@ -961,7 +977,7 @@ const handleUpdateCover = (updated: Partial<import('./types').DocumentCover>) =>
               <LeftChapterTree
                 chapters={project.chapters}
                 activeChapterId={project.activeChapterId}
-                language={project.metadata.primaryLanguage}
+                language={project.metadata.language}
                 activeTab={activeLeftTab}
                 onTabChange={setActiveLeftTab}
                 checkedChapterIds={checkedChapterIds}
@@ -987,12 +1003,12 @@ const handleUpdateCover = (updated: Partial<import('./types').DocumentCover>) =>
         )}
 
         {/* Middle: Document Editor (Visual/HTML) */}
-        <div className="flex-1 flex flex-col h-full bg-[#f4f7f6] min-w-[300px] overflow-hidden">
+        <div className="flex-1 flex flex-col h-full bg-[#f4f7f6] min-w-0 sm:min-w-[150px] overflow-hidden">
           {activeChapter && (
             <MiddleEditor
               chapter={activeChapter}
               settings={project.settings}
-              language={project.metadata.primaryLanguage}
+              language={project.metadata.language}
               isHtmlMode={isHtmlMode}
               activeLeftTab={activeLeftTab}
               checkedChapterIds={checkedChapterIds}
@@ -1016,7 +1032,7 @@ const handleUpdateCover = (updated: Partial<import('./types').DocumentCover>) =>
             >
               <div className="w-0.5 h-6 bg-slate-300 rounded-full" />
             </div>
-            <div style={{ width: rightWidth, minWidth: rightWidth }} className="flex h-full shrink-0">
+            <div style={{ width: rightWidth, minWidth: 'min-content' }} className="flex h-full shrink sm:shrink-0 overflow-x-hidden">
               <RightInspector
                 metadata={project.metadata}
                 settings={project.settings}

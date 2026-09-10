@@ -1,6 +1,7 @@
 
 
 import { DocumentProject, ChapterItem } from '../types';
+import { syncChapterFootnotes } from './footnoteHelper';
 
 const languageNames: Record<string, string> = {
   en: 'English',
@@ -15,13 +16,49 @@ const languageNames: Record<string, string> = {
   ru: 'Русский'
 };
 
+
+function getExportNumberedChapters(chapters: ChapterItem[], language: string) {
+  let counters: number[] = [];
+  let hiddenLevel = -1;
+
+  return chapters.map((chap) => {
+    if (chap.level === 0) {
+      counters = [];
+      hiddenLevel = -1;
+      return { ...chap, exportNumbering: '' };
+    }
+
+    if (hiddenLevel !== -1 && chap.level <= hiddenLevel) {
+      hiddenLevel = -1;
+    }
+
+    if (chap.hideTitle) {
+      if (hiddenLevel === -1) hiddenLevel = chap.level;
+      return { ...chap, exportNumbering: '' };
+    }
+
+    if (hiddenLevel !== -1) {
+      return { ...chap, exportNumbering: '' };
+    }
+
+    while (counters.length < chap.level) counters.push(0);
+    if (counters.length > chap.level) counters.length = chap.level;
+    counters[counters.length - 1]++;
+    
+    // We append a dot and space for export headings, e.g. "1.1. "
+    const formatFootnoteNumber = require('./footnoteHelper').formatFootnoteNumber;
+    return { ...chap, exportNumbering: formatFootnoteNumber(counters.join('.'), language) + '. ' };
+  });
+}
+
 export function generateCompiledHtml(project: DocumentProject): string {
   const { metadata, chapters, settings } = project;
   const displayLang = metadata.language === 'other' ? (metadata.customLanguage || 'Custom') : (languageNames[metadata.language] || metadata.language);
     const authorNames = metadata.authors ? metadata.authors.split(';').map(s=>escapeHtml(s.trim())).filter(Boolean).join('<br/>') : '';
   const translatorNames = metadata.translators ? metadata.translators.split(';').map(s=>escapeHtml(s.trim())).filter(Boolean).join('<br/>') : '';
 
-  const chaptersHtml = chapters
+  const numberedChaps = getExportNumberedChapters(chapters, metadata.language || 'English');
+  const chaptersHtml = numberedChaps
     .map((chap) => {
       if (chap.level === 0) {
         return `
@@ -37,7 +74,7 @@ export function generateCompiledHtml(project: DocumentProject): string {
       
       const headerHtml = chap.hideTitle ? '' : `
           <header class="chapter-header">
-            <${headingTag} class="chapter-title" dir="auto">${escapeHtml(chap.title)}</${headingTag}>
+              <${headingTag} class="chapter-title" dir="auto">${chap.exportNumbering}${escapeHtml(chap.title)}</${headingTag}>
           </header>
       `;
       
@@ -314,7 +351,7 @@ export function generateCompiledHtml(project: DocumentProject): string {
     }
     .doc-footnotes-list li {
       margin-bottom: 6px;
-      line-height: 1.4;
+      line-height: 1.35;
     }
     .doc-footnote-backref { color: var(--accent-color); text-decoration: none; font-weight: 600; }
     .footnote-ref {
@@ -344,8 +381,8 @@ export function generateCompiledHtml(project: DocumentProject): string {
       padding-top: 0.5em;
     }
     .footnote-item {
-      margin-bottom: 0.6em;
-      line-height: 1.5;
+      margin-bottom: 0.5em;
+      line-height: 1.35;
       display: flex;
       gap: 8px;
     }
@@ -359,6 +396,7 @@ export function generateCompiledHtml(project: DocumentProject): string {
     }
     .footnote-text {
       flex: 1;
+      text-align: justify;
     }
 
     .page-divider {
@@ -503,7 +541,7 @@ export function generateCompiledHtml(project: DocumentProject): string {
     <section class="toc-section">
       <h3 class="toc-title">Table of Contents</h3>
       <ul class="toc-list">
-        ${chapters.filter(c => !c.hideTitle).map((c) => {
+        ${numberedChaps.filter(c => !c.hideTitle && c.exportNumbering !== undefined).map((c) => {
           const indentPx = c.level === 0 ? 0 : c.level * 20;
           const fontWeight = c.level === 0 ? '700' : '400';
           const marginTop = c.level === 0 ? '16px' : c.level === 1 ? '8px' : '4px';
@@ -524,7 +562,7 @@ export function generateCompiledHtml(project: DocumentProject): string {
 
           return `
             <li class="toc-item" style="padding-left: ${indentPx}px; font-weight: ${fontWeight}; margin-top: ${marginTop}; text-transform: ${textTransform};">
-              <a class="toc-link" href="#chapter-${c.id}">${escapeHtml(c.title)}</a>
+              <a class="toc-link" href="#chapter-${c.id}">${c.exportNumbering}${escapeHtml(c.title)}</a>
             </li>
             ${headingsHtml}
           `;
@@ -543,6 +581,7 @@ export function generateCompiledHtml(project: DocumentProject): string {
 export function generateMarkdownManuscript(project: DocumentProject): string {
   const { metadata, chapters } = project;
   let md = `# ${metadata.title}\n\n`;
+  const numberedChaps = getExportNumberedChapters(chapters, metadata.language || 'English');
   if (metadata.subtitle) md += `*${metadata.subtitle}*\n\n`;
   md += `**Authors:**\n${metadata.authors ? metadata.authors.split(';').map(s=>s.trim()).filter(Boolean).map(s=>'- '+s).join('\n') : ''}\n`;
   if (metadata.publisherName) md += `**Publisher:** ${metadata.publisherName}\n`;
@@ -578,6 +617,7 @@ export function generateMarkdownManuscript(project: DocumentProject): string {
 export function generatePlainTextManuscript(project: DocumentProject): string {
   const { metadata, chapters } = project;
   let txt = `${metadata.title.toUpperCase()}\n`;
+  const numberedChaps = getExportNumberedChapters(chapters, metadata.language || 'English');
   if (metadata.subtitle) txt += `${metadata.subtitle}\n`;
   txt += `By:\n${metadata.authors ? metadata.authors.split(';').map(s=>s.trim()).filter(Boolean).map(s=>'  '+s).join('\n') : ''}\n`;
   if (metadata.publisherName) txt += `Publisher: ${metadata.publisherName}\n`;

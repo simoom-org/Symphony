@@ -1,6 +1,0 @@
-{
-  "name": "Portable Document Studio",
-  "description": "A minimalist portable desktop document editor with multi-level chapter management, offline storage, metadata and publishing suite.",
-  "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
-}

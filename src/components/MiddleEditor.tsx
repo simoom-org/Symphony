@@ -92,13 +92,21 @@ export const MiddleEditor: React.FC<MiddleEditorProps> = ({
 
   const formatNumber = (num: number | string) => {
     const numStr = String(num);
-    if (language === 'Bangla' || language === 'Bengali') {
-      const bnDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+    if (language === 'Bangla' || language === 'Bengali' || language === 'bn') {
+      const bnDigits = ['\u09E6', '\u09E7', '\u09E8', '\u09E9', '\u09EA', '\u09EB', '\u09EC', '\u09ED', '\u09EE', '\u09EF'];
       return numStr.replace(/\d/g, (d) => bnDigits[parseInt(d, 10)]);
     }
-    if (language === 'Arabic') {
-      const arDigits = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+    if (language === 'Arabic' || language === 'ar') {
+      const arDigits = ['\u0660', '\u0661', '\u0662', '\u0663', '\u0664', '\u0665', '\u0666', '\u0667', '\u0668', '\u0669'];
       return numStr.replace(/\d/g, (d) => arDigits[parseInt(d, 10)]);
+    }
+    if (language === 'Urdu' || language === 'ur') {
+      const urDigits = ['\u06F0', '\u06F1', '\u06F2', '\u06F3', '\u06F4', '\u06F5', '\u06F6', '\u06F7', '\u06F8', '\u06F9'];
+      return numStr.replace(/\d/g, (d) => urDigits[parseInt(d, 10)]);
+    }
+    if (language === 'Hindi' || language === 'hi') {
+      const hiDigits = ['\u0966', '\u0967', '\u0968', '\u0969', '\u096A', '\u096B', '\u096C', '\u096D', '\u096E', '\u096F'];
+      return numStr.replace(/\d/g, (d) => hiDigits[parseInt(d, 10)]);
     }
     return numStr;
   };
@@ -178,9 +186,9 @@ export const MiddleEditor: React.FC<MiddleEditorProps> = ({
           item.className = 'footnote-item';
           item.innerHTML = `
             <a href="#${refId}" contenteditable="false"><sup>${formattedNextNumber}</sup></a>
-            <span class="footnote-text" contenteditable="true">&#8203;</span>
-          `;
-          itemsMap.set(fnId, item);
+            <div class="footnote-text" contenteditable="true">&#8203;</div>
+            `;
+            itemsMap.set(fnId, item);
         } else {
           const itemAnchor = item.querySelector('a');
           if (itemAnchor) {
@@ -259,7 +267,7 @@ export const MiddleEditor: React.FC<MiddleEditorProps> = ({
 
             const inlineTags = ['span', 'a', 'b', 'i', 'u', 'strong', 'em', 'sup', 'sub', 'code', 'strike', 's'];
             
-            if (align && !inlineTags.includes(el.tagName.toLowerCase())) {
+            if (align && (!inlineTags.includes(el.tagName.toLowerCase()) || el.classList.contains('footnote-text'))) {
               el.style.textAlign = align;
             }
             if (textDecor && textDecor.includes('line-through')) {
@@ -591,7 +599,7 @@ export const MiddleEditor: React.FC<MiddleEditorProps> = ({
     
     footnoteItem.innerHTML = `
       <a href="#ref-${fnId}" contenteditable="false"><sup>${nextNumber}</sup></a>
-      <span class="footnote-text" contenteditable="true">&#8203;</span>
+      <div class="footnote-text" contenteditable="true">&#8203;</span>
     `;
     
     footnotesSection.appendChild(footnoteItem);
@@ -810,14 +818,7 @@ export const MiddleEditor: React.FC<MiddleEditorProps> = ({
             >
               <Strikethrough className="w-3.5 h-3.5" />
             </button>
-            <button
-              onMouseDown={(e) => { e.preventDefault(); execCmd('superscript'); }}
-              title="Superscript"
-              className={`p-1.5 rounded transition font-serif font-bold text-[10px] flex items-center justify-center ${activeFormats.superscript ? 'bg-blue-50 text-blue-600' : 'text-slate-700 hover:bg-slate-100'}`}
-            >
-              x²
-            </button>
-          </div>
+            </div>
 
           {/* Direction Tools */}
           <div className="flex items-center gap-0.5 px-1.5 border-r border-slate-200">

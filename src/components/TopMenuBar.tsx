@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { X,  
-  FileText, FolderOpen, Save, FileDown, BookOpen, Printer, RefreshCw,
+  FileText, FolderOpen, Save, FileDown, BookOpen, Printer, Download, RefreshCw,
   Undo2, Redo2, Scissors, Copy, Clipboard, Search, CheckSquare,
   Image as ImageIcon, Table, Minus, Quote, Code,
   Eye, LayoutList, SlidersHorizontal, Sun, Moon, Maximize2,
@@ -9,6 +9,9 @@ import { X,
 import { DocumentProject, RightPanelTab } from '../types';
 
 interface TopMenuBarProps {
+  isDirty: boolean;
+  isDirectSaveMode: boolean;
+  onToggleDirectSave: (isOn: boolean) => void;
   project: DocumentProject;
   onNew: () => void;
   onOpen: () => void;
@@ -36,6 +39,9 @@ interface TopMenuBarProps {
 }
 
 export const TopMenuBar: React.FC<TopMenuBarProps> = ({
+  isDirty,
+  isDirectSaveMode,
+  onToggleDirectSave,
   project,
   onNew,
   onOpen,
@@ -87,15 +93,24 @@ export const TopMenuBar: React.FC<TopMenuBarProps> = ({
   return (
     <div 
       ref={menuBarRef} 
-      id="top-menu-bar"
-      className="bg-white border-b border-slate-200 px-3 py-1 flex items-center justify-between text-xs select-none z-40 relative font-sans text-slate-700"
+      id="unified-top-menu-bar"
+      className="h-10 bg-white border-b border-slate-200 px-3 flex items-center justify-between text-xs select-none z-50 relative font-sans text-slate-700 shrink-0 shadow-sm"
     >
-      {/* Left Menu Items */}
+      {/* LEFT SECTION: Left Panel Toggle + Menus */}
+      <div className="flex items-center gap-1">
+        <button
+          onClick={onToggleLeftPanel}
+          title={leftPanelOpen ? "Hide Left Sidebar" : "Show Left Sidebar"}
+          className={`p-1.5 rounded transition flex items-center justify-center ${
+            leftPanelOpen ? 'bg-slate-100 text-slate-900' : 'hover:bg-slate-100 text-slate-600'
+          }`}
+        >
+          <LayoutList className="w-4 h-4" />
+        </button>
+        <div className="h-4 w-px bg-slate-200 mx-1"></div>
+        {/* Left Menu Items */}
       <div className="flex items-center gap-0.5">
-        {/* Brand Logo */}
-        
-
-        {/* FILE MENU */}
+          {/* FILE MENU */}
         <div className="relative">
           <button
             id="menu-btn-file"
@@ -269,7 +284,7 @@ export const TopMenuBar: React.FC<TopMenuBarProps> = ({
                 Special Characters
               </div>
               <div className="grid grid-cols-6 gap-1 px-3 py-1">
-                {['©', '™', '—', '§', '¶', '•', '°', '±', '≠', '≈', '✓', '★'].map((sym) => (
+                {['\u2014', '\u2013', '\u201C', '\u201D', '\u2018', '\u2019', '\u2026', '\u00A9', '\u00AE', '\u2122', '\u00B0', '\u00B1'].map((sym) => (
                   <button
                     key={sym}
                     onClick={() => handleAction(() => onInsertSymbol(sym))}
@@ -338,47 +353,6 @@ export const TopMenuBar: React.FC<TopMenuBarProps> = ({
           )}
         </div>
 
-        {/* PANELS & WINDOWS SHORTCUTS */}
-        <div className="relative">
-          <button
-            id="menu-btn-panels"
-            onClick={() => handleMenuClick('panels')}
-            className={`px-2.5 py-1 rounded hover:bg-slate-100 transition font-medium ${
-              activeMenu === 'panels' ? 'bg-slate-100 text-blue-600' : ''
-            }`}
-          >
-            Windows
-          </button>
-          {activeMenu === 'panels' && (
-            <div className="absolute left-0 top-full mt-1 w-56 bg-white rounded-md shadow-lg border border-slate-200 py-1 z-50 text-xs animate-in fade-in duration-150">
-              <button
-                onClick={() => handleAction(() => { onSelectRightTab('metadata'); if (!rightPanelOpen) onToggleRightPanel(); })}
-                className="w-full px-3 py-1.5 flex items-center justify-between hover:bg-slate-50 transition text-left"
-              >
-                <span>Document Metadata</span>
-              </button>
-              <button
-                onClick={() => handleAction(() => { onSelectRightTab('cover'); if (!rightPanelOpen) onToggleRightPanel(); })}
-                className="w-full px-3 py-1.5 flex items-center justify-between hover:bg-slate-50 transition text-left"
-              >
-                <span>Book Cover Designer</span>
-              </button>
-              <button
-                onClick={() => handleAction(() => { onSelectRightTab('preview'); if (!rightPanelOpen) onToggleRightPanel(); })}
-                className="w-full px-3 py-1.5 flex items-center justify-between hover:bg-slate-50 transition text-left"
-              >
-                <span>Live Book Preview</span>
-              </button>
-              <button
-                onClick={() => handleAction(() => { onSelectRightTab('snapshots'); if (!rightPanelOpen) onToggleRightPanel(); })}
-                className="w-full px-3 py-1.5 flex items-center justify-between hover:bg-slate-50 transition text-left"
-              >
-                <span>Offline History Snapshots</span>
-              </button>
-            </div>
-          )}
-        </div>
-
         {/* HELP MENU */}
         <div className="relative">
           <button
@@ -410,48 +384,50 @@ export const TopMenuBar: React.FC<TopMenuBarProps> = ({
         </div>
       </div>
 
-      {/* Right Quick Panel Toggles */}
-      <div className="flex items-center gap-1.5 text-xs text-slate-500">
-        <button
-          onClick={onToggleLeftPanel}
-          title={leftPanelOpen ? "Hide Chapter Tree" : "Show Chapter Tree"}
-          className={`px-2 py-1 rounded flex items-center gap-1.5 text-[11px] font-medium transition ${
-            leftPanelOpen 
-              ? 'bg-slate-100 text-slate-900 font-semibold' 
-              : 'hover:bg-slate-100 text-slate-600'
-          }`}
-        >
-          <LayoutList className="w-3.5 h-3.5" />
-          <span className="hidden sm:inline">Chapters</span>
-        </button>
+              </div>
 
-        <button
-          onClick={onToggleHtmlMode}
-          title={isHtmlMode ? "Switch to Visual WYSIWYG" : "Switch to Raw HTML Markup"}
-          className={`px-2 py-1 rounded flex items-center gap-1.5 text-[11px] font-medium transition ${
-            isHtmlMode 
-              ? 'bg-blue-50 text-blue-700 font-semibold' 
-              : 'hover:bg-slate-100 text-slate-600'
-          }`}
-        >
-          <Code className="w-3.5 h-3.5" />
-          <span className="hidden sm:inline">{isHtmlMode ? 'HTML' : 'Visual'}</span>
-        </button>
+      {/* CENTER SECTION: Document Name + Auto Save */}
+      <div className="flex-1 flex items-center justify-center gap-2 sm:gap-3 min-w-0 px-2 sm:px-4 pointer-events-auto">
+        <span className="text-slate-800 font-semibold truncate shrink">
+          {project.metadata.title || 'Untitled Document'}
+        </span>
+        <div className="h-3 w-px bg-slate-300 hidden sm:block shrink-0"></div>
+        <div className="hidden sm:flex items-center gap-1.5 border border-slate-200 bg-slate-50 rounded px-2 py-0.5 shrink-0">
+          <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Auto-save</span>
+          <button 
+            onClick={() => onToggleDirectSave(!isDirectSaveMode)}
+            className={`relative inline-flex h-3.5 w-6 items-center rounded-full transition-colors ${isDirectSaveMode ? 'bg-emerald-500' : 'bg-slate-300'}`}
+          >
+            <span className={`inline-block h-2.5 w-2.5 transform rounded-full bg-white transition-transform ${isDirectSaveMode ? 'translate-x-3' : 'translate-x-0.5'}`} />
+          </button>
+          <div 
+            title={isDirty ? "Unsaved changes in Temp file" : "All changes saved"}
+            className={`ml-0.5 w-2 h-2 rounded-full ${isDirty ? 'bg-red-500 shadow-[0_0_4px_rgba(239,68,68,0.6)] animate-pulse' : 'bg-emerald-500'}`} 
+          />
+        </div>
+      </div>
 
+      {/* RIGHT SECTION: Publish + Right Panel Toggle */}
+      <div className="flex items-center gap-1">
+        <button
+          onClick={onPublish}
+          title="Publish / Export Manuscript"
+          className="flex items-center gap-1.5 px-2.5 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 font-medium rounded transition"
+        >
+          <Download className="w-3.5 h-3.5" />
+          <span className="hidden sm:inline">Publish</span>
+        </button>
+        <div className="h-4 w-px bg-slate-200 mx-1"></div>
         <button
           onClick={onToggleRightPanel}
-          title={rightPanelOpen ? "Hide Inspector Panel" : "Show Inspector Panel"}
-          className={`px-2 py-1 rounded flex items-center gap-1.5 text-[11px] font-medium transition ${
-            rightPanelOpen 
-              ? 'bg-slate-100 text-slate-900 font-semibold' 
-              : 'hover:bg-slate-100 text-slate-600'
+          title={rightPanelOpen ? "Hide Right Sidebar" : "Show Right Sidebar"}
+          className={`p-1.5 rounded transition flex items-center justify-center ${
+            rightPanelOpen ? 'bg-slate-100 text-slate-900' : 'hover:bg-slate-100 text-slate-600'
           }`}
         >
-          <SlidersHorizontal className="w-3.5 h-3.5" />
-          <span className="hidden sm:inline">Inspector</span>
+          <SlidersHorizontal className="w-4 h-4" />
         </button>
       </div>
     </div>
   );
 };
-

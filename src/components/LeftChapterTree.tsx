@@ -75,13 +75,21 @@ export const LeftChapterTree: React.FC<LeftChapterTreeProps> = ({
 
   const formatNumber = (num: number | string) => {
     const numStr = String(num);
-    if (language === 'Bangla' || language === 'Bengali') {
-      const bnDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+    if (language === 'Bangla' || language === 'Bengali' || language === 'bn') {
+      const bnDigits = ['\u09E6', '\u09E7', '\u09E8', '\u09E9', '\u09EA', '\u09EB', '\u09EC', '\u09ED', '\u09EE', '\u09EF'];
       return numStr.replace(/\d/g, (d) => bnDigits[parseInt(d, 10)]);
     }
-    if (language === 'Arabic') {
-      const arDigits = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+    if (language === 'Arabic' || language === 'ar') {
+      const arDigits = ['\u0660', '\u0661', '\u0662', '\u0663', '\u0664', '\u0665', '\u0666', '\u0667', '\u0668', '\u0669'];
       return numStr.replace(/\d/g, (d) => arDigits[parseInt(d, 10)]);
+    }
+    if (language === 'Urdu' || language === 'ur') {
+      const urDigits = ['\u06F0', '\u06F1', '\u06F2', '\u06F3', '\u06F4', '\u06F5', '\u06F6', '\u06F7', '\u06F8', '\u06F9'];
+      return numStr.replace(/\d/g, (d) => urDigits[parseInt(d, 10)]);
+    }
+    if (language === 'Hindi' || language === 'hi') {
+      const hiDigits = ['\u0966', '\u0967', '\u0968', '\u0969', '\u096A', '\u096B', '\u096C', '\u096D', '\u096E', '\u096F'];
+      return numStr.replace(/\d/g, (d) => hiDigits[parseInt(d, 10)]);
     }
     return numStr;
   };
@@ -256,12 +264,7 @@ export const LeftChapterTree: React.FC<LeftChapterTreeProps> = ({
 
       <>
         {/* Panel Header */}
-          <div className="p-3 border-b border-slate-200 space-y-2 bg-white">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-mono text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">
-                {chapters.length} {chapters.length === 1 ? 'node' : 'nodes'}
-              </span>
-            </div>
+          <div className="p-2 border-b border-slate-200 bg-white">
 
             {/* Search input */}
             <div className="relative">

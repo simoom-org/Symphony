@@ -242,17 +242,19 @@ body {
 }
 
 #wysiwyg-content-canvas .footnotes-section {
-  
-  color: #475569;
-  margin-top: 1rem;
-}
+    font-size: 0.85em;
+    line-height: 1.35;
+    color: #475569;
+    margin-top: 1rem;
+  }
 
 #wysiwyg-content-canvas .footnote-item {
-  display: flex;
-  gap: 0.5rem;
-  align-items: flex-start;
-  margin-bottom: 0.375rem;
-}
+    display: flex;
+    gap: 0.5rem;
+    align-items: flex-start;
+    margin-bottom: 0.4em;
+    line-height: 1.35;
+  }
 
 #wysiwyg-content-canvas .footnote-item a {
   color: #2563eb;
@@ -263,8 +265,9 @@ body {
 
 #wysiwyg-content-canvas .footnote-text {
   flex: 1;
-  outline: none;
-  min-height: 1.5em;
+    outline: none;
+    min-height: 1.5em;
+    text-align: justify;
 }
 
 #wysiwyg-content-canvas [align="justify"],
