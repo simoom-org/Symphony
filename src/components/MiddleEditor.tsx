@@ -1103,103 +1103,80 @@ export const MiddleEditor: React.FC<MiddleEditorProps> = ({
                 }
 
                   // Smart Merge: Preserve 'justify' alignment and 'Heading' tags when pressing Delete or Backspace
-                  if (e.key === 'Delete' || e.key === 'Backspace') {
-                    const sel = window.getSelection();
-                    if (sel && sel.isCollapsed) {
-                      let currentBlock = sel.anchorNode;
-                      while (currentBlock && currentBlock !== e.currentTarget && !['P', 'DIV', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'BLOCKQUOTE'].includes((currentBlock as HTMLElement).tagName)) {
-                        currentBlock = currentBlock.parentNode;
-                      }
-                      
-                      if (currentBlock && currentBlock !== e.currentTarget) {
-                        const range = sel.getRangeAt(0);
-                        const testRange = range.cloneRange();
-                        const isJustified = (node: HTMLElement) => 
-                          node && (node.style?.textAlign === 'justify' || node.classList?.contains('text-justify') || node.getAttribute?.('align') === 'justify');
+                if (e.key === 'Delete' || e.key === 'Backspace') {
+                  const sel = window.getSelection();
+                  if (sel && sel.isCollapsed) {
+                    let currentBlock = sel.anchorNode;
+                    while (currentBlock && currentBlock !== e.currentTarget && !['P', 'DIV', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'BLOCKQUOTE'].includes((currentBlock as HTMLElement).tagName)) {
+                      currentBlock = currentBlock.parentNode;
+                    }
+                    
+                    if (currentBlock && currentBlock !== e.currentTarget) {
+                      const range = sel.getRangeAt(0);
+                      const testRange = range.cloneRange();
 
-                        const isHeading = (node: HTMLElement) => 
-                          node && ['H1', 'H2', 'H3', 'H4', 'H5', 'H6'].includes(node.tagName);
+                      const isEmpty = (node: HTMLElement) => 
+                        node.textContent?.replace(/\u200B/g, '').trim().length === 0;
 
-                        const isEmpty = (node: HTMLElement) => 
-                          node.textContent?.replace(/\u200B/g, '').trim().length === 0;
-
-                        if (e.key === 'Delete') {
-                          testRange.selectNodeContents(currentBlock);
-                          testRange.setStart(range.endContainer, range.endOffset);
-                          const remainingText = testRange.toString().replace(/\u200B/g, '').trim();
-                          
-                          if (remainingText.length === 0) {
-                            let nextBlock = (currentBlock as HTMLElement).nextElementSibling as HTMLElement;
-                            if (nextBlock) {
-                              if (isJustified(nextBlock)) {
-                                (currentBlock as HTMLElement).style.textAlign = 'justify';
-                              }
-                              
-                              if (isHeading(nextBlock)) {
-                                if (isEmpty(currentBlock as HTMLElement)) {
-                                  e.preventDefault();
-                                  (currentBlock as HTMLElement).remove();
-                                  const newSel = window.getSelection();
-                                  const newRange = document.createRange();
-                                  newRange.setStart(nextBlock, 0);
-                                  newRange.collapse(true);
-                                  newSel?.removeAllRanges();
-                                  newSel?.addRange(newRange);
-                                  setTimeout(handleVisualInput, 10);
-                                  return;
-                                } else {
-                                  const newBlock = document.createElement(nextBlock.tagName);
-                                  newBlock.innerHTML = (currentBlock as HTMLElement).innerHTML;
-                                  if (isJustified(currentBlock as HTMLElement) || isJustified(nextBlock)) {
-                                    newBlock.style.textAlign = 'justify';
-                                  }
-                                  currentBlock.parentNode?.replaceChild(newBlock, currentBlock);
-                                  
-                                  const newSel = window.getSelection();
-                                  const newRange = document.createRange();
-                                  newRange.selectNodeContents(newBlock);
-                                  newRange.collapse(false);
-                                  newSel?.removeAllRanges();
-                                  newSel?.addRange(newRange);
-                                }
-                              }
+                      if (e.key === 'Delete') {
+                        testRange.selectNodeContents(currentBlock);
+                        testRange.setStart(range.endContainer, range.endOffset);
+                        const remainingText = testRange.toString().replace(/\u200B/g, '').trim();
+                        
+                        if (remainingText.length === 0) {
+                          let nextBlock = (currentBlock as HTMLElement).nextElementSibling as HTMLElement;
+                          if (nextBlock) {
+                            if (isEmpty(nextBlock)) {
+                              e.preventDefault();
+                              nextBlock.remove();
                               setTimeout(handleVisualInput, 10);
+                              return;
+                            } else {
+                              // If they merge, the merged block should take the LOWER block's format
+                              const newBlock = document.createElement(nextBlock.tagName);
+                              newBlock.innerHTML = (currentBlock as HTMLElement).innerHTML;
+                              if (nextBlock.className) newBlock.className = nextBlock.className;
+                              if (nextBlock.style.cssText) newBlock.style.cssText = nextBlock.style.cssText;
+                              currentBlock.parentNode?.replaceChild(newBlock, currentBlock);
+                              
+                              const newSel = window.getSelection();
+                              const newRange = document.createRange();
+                              newRange.selectNodeContents(newBlock);
+                              newRange.collapse(false);
+                              newSel?.removeAllRanges();
+                              newSel?.addRange(newRange);
                             }
+                            setTimeout(handleVisualInput, 10);
                           }
-                        } else if (e.key === 'Backspace') {
-                          testRange.selectNodeContents(currentBlock);
-                          testRange.setEnd(range.startContainer, range.startOffset);
-                          const priorText = testRange.toString().replace(/\u200B/g, '').trim();
-                          
-                          if (priorText.length === 0) {
-                            let prevBlock = (currentBlock as HTMLElement).previousElementSibling as HTMLElement;
-                            if (prevBlock) {
-                              if (isJustified(currentBlock as HTMLElement)) {
-                                prevBlock.style.textAlign = 'justify';
-                              }
-                              
-                              if (isHeading(currentBlock as HTMLElement)) {
-                                if (isEmpty(prevBlock)) {
-                                  e.preventDefault();
-                                  prevBlock.remove();
-                                  setTimeout(handleVisualInput, 10);
-                                  return;
-                                } else {
-                                  const newBlock = document.createElement(currentBlock.tagName);
-                                  newBlock.innerHTML = prevBlock.innerHTML;
-                                  if (isJustified(prevBlock) || isJustified(currentBlock as HTMLElement)) {
-                                    newBlock.style.textAlign = 'justify';
-                                  }
-                                  prevBlock.parentNode?.replaceChild(newBlock, prevBlock);
-                                }
-                              }
+                        }
+                      } else if (e.key === 'Backspace') {
+                        testRange.selectNodeContents(currentBlock);
+                        testRange.setEnd(range.startContainer, range.startOffset);
+                        const priorText = testRange.toString().replace(/\u200B/g, '').trim();
+                        
+                        if (priorText.length === 0) {
+                          let prevBlock = (currentBlock as HTMLElement).previousElementSibling as HTMLElement;
+                          if (prevBlock) {
+                            if (isEmpty(prevBlock)) {
+                              e.preventDefault();
+                              prevBlock.remove();
                               setTimeout(handleVisualInput, 10);
+                              return;
+                            } else {
+                              // If they merge, the merged block should take the LOWER block's format
+                              const newBlock = document.createElement((currentBlock as HTMLElement).tagName);
+                              newBlock.innerHTML = prevBlock.innerHTML;
+                              if ((currentBlock as HTMLElement).className) newBlock.className = (currentBlock as HTMLElement).className;
+                              if ((currentBlock as HTMLElement).style.cssText) newBlock.style.cssText = (currentBlock as HTMLElement).style.cssText;
+                              prevBlock.parentNode?.replaceChild(newBlock, prevBlock);
                             }
+                            setTimeout(handleVisualInput, 10);
                           }
                         }
                       }
                     }
                   }
+                }
 
                 
                 // Heading Shortcuts: Ctrl+Alt+1..6
