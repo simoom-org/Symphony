@@ -1,7 +1,7 @@
 
 
 import { DocumentProject, ChapterItem } from '../types';
-import { syncChapterFootnotes } from './footnoteHelper';
+import { syncChapterFootnotes, formatFootnoteNumber } from './footnoteHelper';
 
 const languageNames: Record<string, string> = {
   en: 'English',
