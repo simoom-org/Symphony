@@ -46,7 +46,7 @@ function getExportNumberedChapters(chapters: ChapterItem[], language: string) {
     counters[counters.length - 1]++;
     
     // We append a dot and space for export headings, e.g. "1.1. "
-    const formatFootnoteNumber = require('./footnoteHelper').formatFootnoteNumber;
+    
     return { ...chap, exportNumbering: formatFootnoteNumber(counters.join('.'), language) + '. ' };
   });
 }
