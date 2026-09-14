@@ -583,12 +583,15 @@ export function generateMarkdownManuscript(project: DocumentProject): string {
   let md = `# ${metadata.title}\n\n`;
   const numberedChaps = getExportNumberedChapters(chapters, metadata.language || 'English');
   if (metadata.subtitle) md += `*${metadata.subtitle}*\n\n`;
+    if (metadata.originalTitle) md += `**Original Name:** ${metadata.originalTitle}\n`;
   md += `**Authors:**\n${metadata.authors ? metadata.authors.split(';').map(s=>s.trim()).filter(Boolean).map(s=>'- '+s).join('\n') : ''}\n`;
   if (metadata.publisherName) md += `**Publisher:** ${metadata.publisherName}\n`;
   if (metadata.publicationDate) md += `**Publication Date:** ${metadata.publicationDate}\n`;
   if (metadata.copyrightInfo) md += `**Copyright:** ${metadata.copyrightInfo}\n`;
   if (metadata.license) md += `**License:** ${metadata.license}\n`;
   if (metadata.isbn) md += `**ISBN:** ${metadata.isbn}\n`;
+    if (metadata.genre) md += `**Genre:** ${metadata.genre}\n`;
+    if (metadata.tags) md += `**Tags:** ${metadata.tags}\n`;
   md += `\n---\n\n`;
 
   for (const chap of chapters) {
@@ -619,10 +622,13 @@ export function generatePlainTextManuscript(project: DocumentProject): string {
   let txt = `${metadata.title.toUpperCase()}\n`;
   const numberedChaps = getExportNumberedChapters(chapters, metadata.language || 'English');
   if (metadata.subtitle) txt += `${metadata.subtitle}\n`;
+    if (metadata.originalTitle) txt += `Original Name: ${metadata.originalTitle}\n`;
   txt += `By:\n${metadata.authors ? metadata.authors.split(';').map(s=>s.trim()).filter(Boolean).map(s=>'  '+s).join('\n') : ''}\n`;
   if (metadata.publisherName) txt += `Publisher: ${metadata.publisherName}\n`;
   if (metadata.publicationDate) txt += `Publication Date: ${metadata.publicationDate}\n`;
   if (metadata.isbn) txt += `ISBN: ${metadata.isbn}\n`;
+    if (metadata.genre) txt += `Genre: ${metadata.genre}\n`;
+    if (metadata.tags) txt += `Tags: ${metadata.tags}\n`;
   if (metadata.copyrightInfo) txt += `Copyright: ${metadata.copyrightInfo}\n`;
   if (metadata.license) txt += `License: ${metadata.license}\n`;
   if (metadata.publisherName) txt += `Publisher: ${metadata.publisherName}\n`;

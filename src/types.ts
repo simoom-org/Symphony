@@ -37,7 +37,9 @@ export interface ProjectMetadata {
   isbn: string;
   copyrightInfo: string;
   license?: string;
-  genreTags: string;
+  genre: string;
+  tags: string;
+  originalTitle?: string;
   description: string;
   cover: DocumentCover;
 }

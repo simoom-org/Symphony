@@ -324,6 +324,7 @@ ${bodyHtml}
 
   const dcCreators = authorsList.map(name => `<dc:creator opf:role="aut" opf:file-as="${escapeXml(name)}">${escapeXml(name)}</dc:creator>`).join('\n    ');
   const dcSubjects = tagsList.map(tag => `<dc:subject>${escapeXml(tag)}</dc:subject>`).join('\n    ');
+  const dcGenre = project.metadata.genre ? `<dc:type>${escapeXml(project.metadata.genre)}</dc:type>` : '';
   const dcTranslators = translatorsList.map(name => `<dc:contributor opf:role="trl" opf:file-as="${escapeXml(name)}">${escapeXml(name)}</dc:contributor>`).join('\n    ');
 
   // Close remaining navPoints
