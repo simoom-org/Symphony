@@ -38,6 +38,7 @@ function localizeNumber(num: string | number, lang: string) {
 }
 
 export async function generateEpubBlob(project: DocumentProject): Promise<Blob> {
+  const title = project.metadata.title ? project.metadata.title : (project.id || 'Untitled Document');
   const metadata = project.metadata;
 
   const zip = new JSZip();
@@ -145,6 +146,110 @@ export async function generateEpubBlob(project: DocumentProject): Promise<Blob> 
   }
 
   // Create HTML TOC
+  
+  // Generate Title/Copyright Page
+    const lang = metadata.language || 'en';
+    const labels: Record<string, any> = {
+      bn: {
+        originalName: "মূল বইঃ",
+        translator: "অনুবাদকঃ",
+        publisher: "প্রকাশকঃ",
+        pubDate: "প্রকাশকালঃ",
+        license: "লাইসেন্সঃ",
+        copyright: "কপিরাইটঃ"
+      },
+      en: {
+        originalName: "Original Book:",
+        translator: "Translated by:",
+        publisher: "Publisher:",
+        pubDate: "Publication Date:",
+        license: "License:",
+        copyright: "Copyright:"
+      }
+    };
+    const l = labels[lang] || labels.en;
+
+    const authorsHtml = project.metadata.authors ? 
+      project.metadata.authors.split(';').map(s => `<div>${escapeXml(s.trim())}</div>`).filter(Boolean).join('') : 
+      '<div>Unknown Author</div>';
+      
+    const translatorsHtml = project.metadata.translators ? 
+      project.metadata.translators.split(';').map(s => `<div>${escapeXml(s.trim())}</div>`).filter(Boolean).join('') : 
+      '';
+
+    let titlePageHtml = `<?xml version="1.0" encoding="UTF-8"?>
+  <!DOCTYPE html>
+  <html xmlns="http://www.w3.org/1999/xhtml" dir="auto">
+  <head>
+    <title>Title Page</title>
+    <style type="text/css">
+      body { font-family: 'Georgia', 'SolaimanLipi', 'Scheherazade New', serif; text-align: center; margin: 2em; line-height: 1.6; }
+      .title-section { margin-top: 10%; }
+      h1 { font-size: 2em; margin-bottom: 0.2em; font-weight: bold; }
+      h2 { font-size: 1.5em; font-weight: normal; margin-top: 0; color: #444; }
+      h3 { font-size: 1.2em; font-weight: normal; margin-top: 1.5em; color: #555; }
+      .author-section { margin-top: 15%; margin-bottom: 15%; }
+      .authors { font-size: 1.3em; font-weight: bold; margin-bottom: 1em; }
+      .translators { font-size: 1.1em; color: #333; margin-top: 1.5em; }
+      .translator-label { font-weight: bold; margin-bottom: 0.5em; }
+      .bottom-section { text-align: left; font-size: 0.9em; border-top: 1px solid #ccc; padding-top: 1.5em; margin-top: 15%; }
+      .meta-line { margin-bottom: 0.5em; }
+    </style>
+  </head>
+  <body>
+    <div class="title-section">
+      <h1>${escapeXml(title)}</h1>`;
+
+    if (project.metadata.subtitle) {
+      titlePageHtml += `
+      <h2>${escapeXml(project.metadata.subtitle)}</h2>`;
+    }
+    if (project.metadata.originalTitle) {
+      titlePageHtml += `
+      <h3>${l.originalName} ${escapeXml(project.metadata.originalTitle)}</h3>`;
+    }
+    
+    titlePageHtml += `
+    </div>
+    
+    <div class="author-section">
+      <div class="authors">${authorsHtml}</div>`;
+      
+    if (translatorsHtml) {
+      titlePageHtml += `
+      <div class="translators">
+        <div class="translator-label">${l.translator}</div>
+        ${translatorsHtml}
+      </div>`;
+    }
+    
+    titlePageHtml += `
+    </div>
+    
+    <div class="bottom-section">`;
+    
+    if (project.metadata.publisherName) titlePageHtml += `
+      <div class="meta-line"><strong>${l.publisher}</strong> ${escapeXml(project.metadata.publisherName)}</div>`;
+    if (project.metadata.publicationDate) titlePageHtml += `
+      <div class="meta-line"><strong>${l.pubDate}</strong> ${escapeXml(project.metadata.publicationDate)}</div>`;
+    if (project.metadata.isbn) titlePageHtml += `
+      <div class="meta-line"><strong>ISBN:</strong> ${escapeXml(project.metadata.isbn)}</div>`;
+    if (project.metadata.license) titlePageHtml += `
+      <div class="meta-line"><strong>${l.license}</strong> ${escapeXml(project.metadata.license)}</div>`;
+    if (project.metadata.copyrightInfo) titlePageHtml += `
+      <div class="meta-line"><strong>${l.copyright}</strong> ${escapeXml(project.metadata.copyrightInfo)}</div>`;
+    
+    titlePageHtml += `
+    </div>
+  </body>
+  </html>`;
+  
+  oebps?.file('title-page.xhtml', titlePageHtml);
+  manifestItems += `    <item id="title-page" href="title-page.xhtml" media-type="application/xhtml+xml"/>
+`;
+  spineItems += `    <itemref idref="title-page" linear="yes"/>
+`;
+
   manifestItems += `    <item id="toc-html" href="toc.xhtml" media-type="application/xhtml+xml" properties="nav"/>\n`;
   spineItems += `    <itemref idref="toc-html" linear="yes"/>\n`;
   
@@ -308,7 +413,6 @@ ${bodyHtml}
   });
 
   // Create content.opf
-  const title = project.metadata.title ? project.metadata.title : (project.id || 'Untitled Document');
   
   const extractList = (str: any) => {
     if (!str) return [];
@@ -324,7 +428,8 @@ ${bodyHtml}
 
   const dcCreators = authorsList.map(name => `<dc:creator opf:role="aut" opf:file-as="${escapeXml(name)}">${escapeXml(name)}</dc:creator>`).join('\n    ');
   const dcSubjects = tagsList.map(tag => `<dc:subject>${escapeXml(tag)}</dc:subject>`).join('\n    ');
-  const dcGenre = project.metadata.genre ? `<dc:type>${escapeXml(project.metadata.genre)}</dc:type>` : '';
+  const genreList = extractList(project.metadata.genre);
+  const dcGenre = genreList.map(g => `<dc:type>${escapeXml(g)}</dc:type>`).join('\n    ');
   const dcTranslators = translatorsList.map(name => `<dc:contributor opf:role="trl" opf:file-as="${escapeXml(name)}">${escapeXml(name)}</dc:contributor>`).join('\n    ');
 
   // Close remaining navPoints
@@ -354,9 +459,18 @@ ${bodyHtml}
 <package xmlns="http://www.idpf.org/2007/opf" unique-identifier="BookId" version="2.0">
   <metadata xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:opf="http://www.idpf.org/2007/opf">
     <dc:title>${escapeXml(title)}</dc:title>
+    ${project.metadata.subtitle ? `<dc:description id="subtitle">${escapeXml(project.metadata.subtitle)}</dc:description>` : ''}
+    ${project.metadata.originalTitle ? `<dc:title id="original-title">${escapeXml(project.metadata.originalTitle)}</dc:title>` : ''}
     ${dcCreators}
-${dcSubjects ? '    ' + dcSubjects : ''}
-${dcTranslators ? '    ' + dcTranslators : ''}
+    ${dcSubjects ? dcSubjects : ''}
+    ${dcTranslators ? dcTranslators : ''}
+    ${dcGenre ? dcGenre : ''}
+    ${project.metadata.publisherName ? `<dc:publisher>${escapeXml(project.metadata.publisherName)}</dc:publisher>` : ''}
+    ${project.metadata.publicationDate ? `<dc:date>${escapeXml(project.metadata.publicationDate)}</dc:date>` : ''}
+    ${project.metadata.isbn ? `<dc:identifier opf:scheme="ISBN">${escapeXml(project.metadata.isbn)}</dc:identifier>` : ''}
+    ${project.metadata.copyrightInfo ? `<dc:rights id="copyright">${escapeXml(project.metadata.copyrightInfo)}</dc:rights>` : ''}
+    ${project.metadata.license ? `<dc:rights id="license">${escapeXml(project.metadata.license)}</dc:rights>` : ''}
+    ${project.metadata.description ? `<dc:description id="description">${escapeXml(project.metadata.description)}</dc:description>` : ''}
     <dc:language>${metadata.language && metadata.language !== 'other' ? metadata.language : (metadata.customLanguage || 'en')}</dc:language>
     <dc:identifier id="BookId">urn:uuid:${crypto.randomUUID ? crypto.randomUUID() : '12345-67890'}</dc:identifier>
       ${coverMeta}

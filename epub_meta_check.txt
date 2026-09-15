@@ -1,0 +1,17 @@
+--- ALL METADATA (content.opf) ---
+dc:title -> তাহারাত
+dc:title id="original-title" -> الطهارات
+dc:creator opf:role="aut" opf:file-as="IbnShams" -> IbnShams
+dc:subject -> পবিত্রতা
+dc:subject -> পরিচ্ছন্নতা
+dc:contributor opf:role="trl" opf:file-as="AbuAsma" -> AbuAsma
+dc:type -> ইবাদত
+dc:type -> ইসলাম
+dc:publisher -> Simoom
+dc:date -> ২০২৪
+dc:identifier opf:scheme="ISBN" -> 123456
+dc:rights -> @Simsoft
+dc:rights -> CC-DD
+dc:description -> পরিচ্ছন্নতা সম্পর্কে জ্ঞানার্জনের গুরুত্ব
+dc:language -> bn
+dc:identifier id="BookId" -> urn:uuid:3fc68fdd-44b4-427e-b460-60b3397db939

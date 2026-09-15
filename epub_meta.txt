@@ -1,0 +1,11 @@
+--- METADATA (content.opf) ---
+title: তাহারাত
+creator: IbnShams
+subject: পবিত্রতা
+subject: পরিচ্ছন্নতা
+contributor: AbuAsma
+language: bn
+identifier: urn:uuid:2c2a99ee-19bd-439d-b011-ac3c38a46330
+
+--- CHECKING TITLE PAGE FOR ORIGINAL NAME ---
+Title page not found.

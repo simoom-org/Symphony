@@ -493,11 +493,6 @@ export function generateCompiledHtml(project: DocumentProject): string {
           <div>${escapeHtml(metadata.subtitle)}</div>
         ` : ''}
 
-        ${metadata.originalTitle ? `
-          <div class="meta-label">Original Name:</div>
-          <div>${escapeHtml(metadata.originalTitle)}</div>
-        ` : ''}
-
         <div class="meta-label">Authors:</div>
         <div>${authorNames || 'Unspecified'}</div>
 
@@ -515,13 +510,6 @@ export function generateCompiledHtml(project: DocumentProject): string {
           <div class="meta-label">ISBN:</div>
           <div>${escapeHtml(metadata.isbn)}</div>
         ` : ''}
-
-        ${metadata.genre ? `
-          <div class="meta-label">Genre:</div>
-          <div>${escapeHtml(metadata.genre.split(';').map(g => g.trim()).filter(Boolean).join(', '))}</div>
-        ` : ''}
-
-
 
         ${false ? `
           <div class="meta-label">DOI:</div>
@@ -602,7 +590,8 @@ export function generateMarkdownManuscript(project: DocumentProject): string {
   if (metadata.copyrightInfo) md += `**Copyright:** ${metadata.copyrightInfo}\n`;
   if (metadata.license) md += `**License:** ${metadata.license}\n`;
   if (metadata.isbn) md += `**ISBN:** ${metadata.isbn}\n`;
-    if (metadata.genre) md += `**Genre:** ${metadata.genre.split(';').map(g => g.trim()).filter(Boolean).join(', ')}\n`;
+    if (metadata.genre) md += `**Genre:** ${metadata.genre}\n`;
+    if (metadata.tags) md += `**Tags:** ${metadata.tags}\n`;
   md += `\n---\n\n`;
 
   for (const chap of chapters) {
@@ -638,7 +627,8 @@ export function generatePlainTextManuscript(project: DocumentProject): string {
   if (metadata.publisherName) txt += `Publisher: ${metadata.publisherName}\n`;
   if (metadata.publicationDate) txt += `Publication Date: ${metadata.publicationDate}\n`;
   if (metadata.isbn) txt += `ISBN: ${metadata.isbn}\n`;
-    if (metadata.genre) txt += `Genre: ${metadata.genre.split(';').map(g => g.trim()).filter(Boolean).join(', ')}\n`;
+    if (metadata.genre) txt += `Genre: ${metadata.genre}\n`;
+    if (metadata.tags) txt += `Tags: ${metadata.tags}\n`;
   if (metadata.copyrightInfo) txt += `Copyright: ${metadata.copyrightInfo}\n`;
   if (metadata.license) txt += `License: ${metadata.license}\n`;
   if (metadata.publisherName) txt += `Publisher: ${metadata.publisherName}\n`;

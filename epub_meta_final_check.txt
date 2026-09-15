@@ -1,0 +1,33 @@
+--- ALL METADATA (content.opf) ---
+dc:title -> তাহারাত
+dc:description id="subtitle" -> পবিত্রতা
+dc:title id="original-title" -> الطهارات
+dc:creator opf:role="aut" opf:file-as="IbnShams" -> IbnShams
+dc:subject -> পবিত্রতা
+dc:subject -> পরিচ্ছন্নতা
+dc:contributor opf:role="trl" opf:file-as="AbuAsma" -> AbuAsma
+dc:type -> ইবাদত
+dc:type -> ইসলাম
+dc:publisher -> Simoom
+dc:date -> ২০২৪
+dc:identifier opf:scheme="ISBN" -> 123456
+dc:rights id="copyright" -> @Simsoft
+dc:rights id="license" -> CC-DD
+dc:description id="description" -> পরিচ্ছন্নতা সম্পর্কে জ্ঞানার্জনের গুরুত্ব
+dc:language -> bn
+dc:identifier id="BookId" -> urn:uuid:8b97e6f0-130f-422a-8125-537ab17e2060
+
+--- TITLE PAGE (title-page.xhtml) ---
+<h1>তাহারাত</h1>
+  <h2>পবিত্রতা</h2>
+  <h3>Original Name: الطهارات</h3>
+  <div class="authors">IbnShams</div>
+  <div class="translators">Translated by:<br/>AbuAsma</div>
+  <div class="copyright">
+    <div class="meta-line"><strong>Publisher:</strong> Simoom</div>
+    <div class="meta-line"><strong>Publication Date:</strong> ২০২৪</div>
+    <div class="meta-line"><strong>ISBN:</strong> 123456</div>
+    <div class="meta-line"><strong>Genre:</strong> ইবাদত, ইসলাম</div>
+    <div class="meta-line"><strong>Copyright:</strong> @Simsoft</div>
+    <div class="meta-line"><strong>License:</strong> CC-DD</div>
+  </div>

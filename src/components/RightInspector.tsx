@@ -170,6 +170,10 @@ export const RightInspector: React.FC<RightInspectorProps> = ({
         <input type="text" placeholder="Leave blank to use Document Name" className="w-full text-sm p-2 bg-slate-50 border border-slate-200 rounded focus:ring-2 focus:ring-blue-500" value={metadata.title || ''} onChange={e => onUpdateMetadata('title', e.target.value)} />
       </div>
       <div>
+        <label className="block text-xs font-medium text-slate-500 mb-1">Original Name (If Translated)</label>
+        <input type="text" className="w-full text-sm p-2 bg-slate-50 border border-slate-200 rounded focus:ring-2 focus:ring-blue-500" value={metadata.originalTitle || ''} onChange={e => onUpdateMetadata('originalTitle', e.target.value)} />
+      </div>
+      <div>
         <label className="block text-xs font-medium text-slate-500 mb-1">Subtitle</label>
         <input type="text" className="w-full text-sm p-2 bg-slate-50 border border-slate-200 rounded focus:ring-2 focus:ring-blue-500" value={metadata.subtitle || ''} onChange={e => onUpdateMetadata('subtitle', e.target.value)} />
       </div>
@@ -207,10 +211,14 @@ export const RightInspector: React.FC<RightInspectorProps> = ({
           </div>
         )}
       </div>
-      <div>
-        <label className="block text-xs font-medium text-slate-500 mb-1">Genre / Tags</label>
-        <TagInput placeholder="Type tag and press ';' or Enter" value={metadata.genreTags || ''} onChange={(val: string) => onUpdateMetadata('genreTags', val)} />
-      </div>
+        <div>
+          <label className="block text-xs font-medium text-slate-500 mb-1">Genre</label>
+          <TagInput placeholder="Type genre and press ';' or Enter" value={metadata.genre || ''} onChange={(val: string) => onUpdateMetadata('genre', val)} />
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-slate-500 mb-1">Tags</label>
+          <TagInput placeholder="Type tag and press ';' or Enter" value={metadata.tags || ''} onChange={(val: string) => onUpdateMetadata('tags', val)} />
+        </div>
       <div>
         <label className="block text-xs font-medium text-slate-500 mb-1">Publication Date</label>
         <input type="text" placeholder="e.g. 2026, August 2026, 26 Aug 2026" className="w-full text-sm p-2 bg-slate-50 border border-slate-200 rounded focus:ring-2 focus:ring-blue-500" value={metadata.publicationDate || ''} onChange={e => onUpdateMetadata('publicationDate', e.target.value)} />
